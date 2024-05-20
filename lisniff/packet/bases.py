@@ -5,7 +5,7 @@ from .interfaces import IPacketParser
 from .types import MacIP
 from .types import EtherType
 from .types import ether_types
-from core.utils import format_mac_ip
+from lisniff.utils import format_mac_ip
 
 
 class Packet(IPacket):

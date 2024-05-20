@@ -1,4 +1,4 @@
-from core import Sniffer
+from lisniff import Sniffer
 
 
 sniffer = Sniffer()

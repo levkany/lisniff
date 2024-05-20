@@ -1,5 +1,5 @@
 import socket
-from core.packet.bases import PacketParser
+from lisniff.packet.bases import PacketParser
 from .interfaces import ISniffer
 
 
