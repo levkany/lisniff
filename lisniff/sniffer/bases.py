@@ -10,6 +10,7 @@ from lisniff.logger import lisniff_logger
 class Sniffer(ISniffer):
     def __init__(self):
         self.__queue = queue.Queue()
+        self.__total_processed = 0
         self.__parser = PacketParser()
         self.__raw_socket = None
         self.__port = 443
@@ -28,6 +29,12 @@ class Sniffer(ISniffer):
         self.__logger.debug("main socket created and ready ..")
         self.__worker_thread = threading.Thread(target=self.process, daemon=True)
         self.__logger.debug("worker thread created and ready ..")
+        
+    def get_total_packets_processed(self) -> int:
+        return self.__total_processed
+
+    def get_total_packets_awaiting(self) -> int:
+        return self.__queue.qsize()
         
     def get_logger(self):
         return self.__logger
@@ -53,6 +60,7 @@ class Sniffer(ISniffer):
             data = self.__queue.get()
             packet = self.__parser.parse(data)
             self.__queue.task_done()
+            self.__total_processed += 1
             self.trigger_event(events.PACKET_PROCESSED, packet=packet)
 
     def run(self):
