@@ -2,6 +2,7 @@ import threading
 import queue
 import socket
 from lisniff.packet.bases import PacketParser
+from lisniff.packet.bases import InternetPacketParser
 from .interfaces import ISniffer
 from lisniff import events
 from lisniff.logger import lisniff_logger
@@ -12,6 +13,7 @@ class Sniffer(ISniffer):
         self.__queue = queue.Queue()
         self.__total_processed = 0
         self.__parser = PacketParser()
+        self.__internet_packet_parser = InternetPacketParser()
         self.__raw_socket = None
         self.__port = 443
         self.__is_running = False
@@ -59,6 +61,15 @@ class Sniffer(ISniffer):
         while True:
             data = self.__queue.get()
             packet = self.__parser.parse(data)
+            
+            if packet.get_ether_type() == "0800":
+                internet_packet = self.__internet_packet_parser.parse(packet.get_raw_payload())
+                internet_packet.set_destination_mac_ip(packet.get_destination_mac_ip())
+                internet_packet.set_source_mac_ip(packet.get_source_mac_ip())
+                internet_packet.set_ether_type(packet.get_ether_type())
+                internet_packet.set_checksum(packet.get_checksum())
+                packet = internet_packet
+            
             self.__queue.task_done()
             self.__total_processed += 1
             self.trigger_event(events.PACKET_PROCESSED, packet=packet)
