@@ -61,6 +61,9 @@ class Sniffer(ISniffer):
         while True:
             data = self.__queue.get()
             packet = self.__parser.parse(data)
+            self.__queue.task_done()
+            self.__total_processed += 1
+            self.trigger_event(events.PACKET_PROCESSED, packet=packet)
             
             if packet.get_ether_type() == "0800":
                 internet_packet = self.__internet_packet_parser.parse(packet.get_raw_payload())
@@ -68,11 +71,7 @@ class Sniffer(ISniffer):
                 internet_packet.set_source_mac_ip(packet.get_source_mac_ip())
                 internet_packet.set_ether_type(packet.get_ether_type())
                 internet_packet.set_checksum(packet.get_checksum())
-                packet = internet_packet
-            
-            self.__queue.task_done()
-            self.__total_processed += 1
-            self.trigger_event(events.PACKET_PROCESSED, packet=packet)
+                self.trigger_event(events.IPV4_PACKET_PROCESSED, packet=internet_packet)
 
     def run(self):
         if not self.__raw_socket:
